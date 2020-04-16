@@ -1,6 +1,17 @@
+server:
+    port: 8080
+
 spring:
     datasource:
         driver-class-name: org.postgresql.Driver
-        url: jdbc:postgresql://192.168.152.43:5432/testdb
+        url: jdbc:postgresql://192.168.160.18:5432/mydb
         username: postgres
-        password: 111
+        password: postgres
+
+mybatis:
+    mapper-locations: classpath:mapper/*.xml
+    # 配置实体类包地址
+    type-aliases-package: com.example.ssojwt.model
+    # 驼峰转下划线
+    configuration:
+      map-underscore-to-camel-case: true
