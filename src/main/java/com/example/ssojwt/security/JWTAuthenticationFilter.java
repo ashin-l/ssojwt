@@ -41,7 +41,7 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
       // Authorization中是否包含Bearer，有一个不包含时直接返回
       if (header == null || !header.startsWith("Bearer ")) {
         chain.doFilter(request, response);
-        responseJson(response);
+        //responseJson(response);
         return;
       }
       // 获取权限失败，会抛出异常
@@ -90,6 +90,8 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
       String user = Jwts.parser()
           // 签名、密钥
           .setSigningKey("MyJwtSecret").parseClaimsJws(token.replace("Bearer ", "")).getBody().getSubject();
+      
+      System.out.println("********** username: " + user);
       // 不为null，返回
       if (user != null) {
         return new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());

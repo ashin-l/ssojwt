@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.apache.catalina.User;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -48,24 +49,26 @@ public class JWTLoginFilter extends UsernamePasswordAuthenticationFilter {
       // 从输入流中获取到登录的信息
       LoginUser user = new ObjectMapper().readValue(request.getInputStream(), LoginUser.class);
       UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(user.getUsername(),
-          user.getPassword(), new ArrayList<>());
+          user.getPassword());
       return authenticationManager.authenticate(authRequest);
     } catch (Exception e) {
-      try {
-        // 未登錄出現賬號或密碼錯誤時，使用json進行提示
-        response.setContentType("application/json;charset=utf-8");
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        PrintWriter out = response.getWriter();
-        Map<String, Object> map = new HashMap<String, Object>();
-        map.put("code", HttpServletResponse.SC_UNAUTHORIZED);
-        map.put("message", "账号或密码错误！");
-        out.write(new ObjectMapper().writeValueAsString(map));
-        out.flush();
-        out.close();
-      } catch (Exception e1) {
-        e1.printStackTrace();
-      }
-      throw new RuntimeException(e);
+      e.printStackTrace();
+      return null;
+      // try {
+      // // 未登錄出現賬號或密碼錯誤時，使用json進行提示
+      // response.setContentType("application/json;charset=utf-8");
+      // response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+      // PrintWriter out = response.getWriter();
+      // Map<String, Object> map = new HashMap<String, Object>();
+      // map.put("code", HttpServletResponse.SC_UNAUTHORIZED);
+      // map.put("message", "账号或密码错误！");
+      // out.write(new ObjectMapper().writeValueAsString(map));
+      // out.flush();
+      // out.close();
+      // } catch (Exception e1) {
+      // e1.printStackTrace();
+      // }
+      // throw new RuntimeException(e);
     }
   }
 
@@ -76,11 +79,12 @@ public class JWTLoginFilter extends UsernamePasswordAuthenticationFilter {
   protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
       Authentication authResult) throws IOException, ServletException {
 
+    UserDetailsImpl user = (UserDetailsImpl) authResult.getPrincipal();
     // json web token构建
     String token = Jwts.builder()
         // 此处为自定义的、实现org.springframework.security.core.userdetails.UserDetails的类，需要和配置中设置的保持一致
         // 此处的subject可以用一个用户名，也可以是多个信息的组合，根据需要来定
-        .setSubject(((UserDetailsImpl) authResult.getPrincipal()).getUsername())
+        .setSubject(user.getUsername())
         // 设置token过期时间，24小時
         .setExpiration(new Date(System.currentTimeMillis() + 60 * 60 * 24 * 1000))
 
@@ -89,23 +93,31 @@ public class JWTLoginFilter extends UsernamePasswordAuthenticationFilter {
 
         .compact();
 
+    System.out.println("*************** " + token);
     // 返回token
     response.addHeader("Authorization", "Bearer " + token);
 
-    try {
-      // 登录成功時，返回json格式进行提示
-      response.setContentType("application/json;charset=utf-8");
-      response.setStatus(HttpServletResponse.SC_OK);
-      PrintWriter out = response.getWriter();
-      Map<String, Object> map = new HashMap<String, Object>();
-      map.put("code", HttpServletResponse.SC_OK);
-      map.put("message", "登陆成功！");
-      out.write(new ObjectMapper().writeValueAsString(map));
-      out.flush();
-      out.close();
-    } catch (Exception e1) {
-      e1.printStackTrace();
-    }
+    // try {
+    // // 登录成功時，返回json格式进行提示
+    // response.setContentType("application/json;charset=utf-8");
+    // response.setStatus(HttpServletResponse.SC_OK);
+    // PrintWriter out = response.getWriter();
+    // Map<String, Object> map = new HashMap<String, Object>();
+    // map.put("code", HttpServletResponse.SC_OK);
+    // map.put("message", "登陆成功！");
+    // out.write(new ObjectMapper().writeValueAsString(map));
+    // out.flush();
+    // out.close();
+    // } catch (Exception e1) {
+    // e1.printStackTrace();
+    // }
+  }
+
+  @Override
+  protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
+      AuthenticationException failed) throws IOException, ServletException {
+    // TODO Auto-generated method stub
+    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, failed.getMessage());
   }
 
 }

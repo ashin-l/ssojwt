@@ -35,7 +35,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         // 关闭跨站请求防护
         .cors().and().csrf().disable()
         // 允许不登陆就可以访问的方法，多个用逗号分隔
-        .authorizeRequests().antMatchers("/home").permitAll()
+        .authorizeRequests().antMatchers("/home","/login").permitAll()
         // 其他的需要授权后访问
         .anyRequest().authenticated()
 
@@ -46,7 +46,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         .addFilter(new JWTAuthenticationFilter(authenticationManager()))
         // 前后端分离是无状态的，所以暫時不用session，將登陆信息保存在token中。
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-
+    // 防止H2 web 页面的Frame 被拦截
+    http.headers().frameOptions().disable();
   }
 
 

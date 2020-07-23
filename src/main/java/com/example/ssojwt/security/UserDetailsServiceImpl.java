@@ -29,8 +29,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
     //在这里可以自己调用数据库，对username进行查询，看看在数据库中是否存在
     SysUser user = userDao.getByName(username);
+    System.out.println("=======================");
+    System.out.println(user);
     //SysUser user = new SysUser();
-    user.setUsername("user");
+    //user.setUsername("user");
     return new UserDetailsImpl(user);
   }
 
